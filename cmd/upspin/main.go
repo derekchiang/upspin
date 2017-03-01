@@ -73,6 +73,7 @@ For a list of available subcommands and global flags, run
 `
 
 var commands = map[string]func(*State, ...string){
+	"access":        (*State).access,
 	"countersign":   (*State).countersign,
 	"cp":            (*State).cp,
 	"deletestorage": (*State).deletestorage,

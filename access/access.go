@@ -251,6 +251,61 @@ func Parse(pathName upspin.PathName, data []byte) (*Access, error) {
 	return a, nil
 }
 
+// Marshal returns the canonical form of an Access file, in bytes.
+//
+// The canonical form of Access files looks like the following:
+//
+// read: user, user, ...
+// write: user, user, ...
+// list: user, user, ...
+// create: user, user, ...
+// delete: user, user, ...
+//
+// It follows three rules:
+//
+// 1. Each rule has its own line, unless there are no users that has the
+// said rule.
+// 2. Rules are ordered as follows: read -> write -> list -> create -> delete
+// 3. Within a line, users are ordered alphanumerically.
+func (a *Access) Marshal() []byte {
+	var buf bytes.Buffer
+	for right := Read; right < Read+numRights; right++ {
+		users := a.list[right]
+		if len(users) == 0 {
+			// skip rights that don't have any users
+			continue
+		}
+
+		// a line starts with "right: "
+		buf.Write(rightNames[right])
+		buf.WriteString(": ")
+
+		// if it's world-readable, "all" is the only user
+		if right == Read && a.worldReadable {
+			buf.WriteString("all")
+			continue
+		}
+
+		// userSet is used to de-dup users
+		var userSet map[upspin.PathName]bool
+		// users are already sorted
+		for i, userParsed := range users {
+			user := userParsed.Path()
+			if userSet[user] {
+				continue
+			}
+			userSet[user] = true
+			if i == 0 {
+				buf.WriteString(string(user))
+			} else {
+				// we use comma to separate users
+				buf.WriteString(" ," + string(user))
+			}
+		}
+	}
+	return buf.Bytes()
+}
+
 func (a *Access) addRight(r Right, owner upspin.UserName, users [][]byte) ([]byte, error) {
 	// Save allocations by doing some pre-emptively.
 	if a.list[r] == nil {
