@@ -39,8 +39,6 @@ upspin -grant write ann@example.com bob@example.com me@example.com/photos/Access
 upspin -revoke '*' ann@example.com me@example.com/Access
 `
 
-	fmt.Println("BP1")
-
 	fs := flag.NewFlagSet("access", flag.ExitOnError)
 	grant := fs.Bool("grant", false, "")
 	revoke := fs.Bool("revoke", false, "")
@@ -55,8 +53,6 @@ upspin -revoke '*' ann@example.com me@example.com/Access
 		fs.Usage()
 	}
 
-	fmt.Println("BP2")
-
 	//rights := args[0]
 	accessPath := upspin.PathName(args[len(args)-1])
 	//users := args[1 : len(args)-1]
@@ -65,14 +61,10 @@ upspin -revoke '*' ann@example.com me@example.com/Access
 		s.exitf("not an Access file: %s", accessPath)
 	}
 
-	fmt.Println("BP3")
-
 	entry, err := s.DirServer(accessPath).Lookup(accessPath)
 	if err != nil {
 		s.exit(err)
 	}
-
-	fmt.Println("BP4")
 
 	// Parse the current Access file to ensure that it's not malformed
 	accessBytes := s.readOrExit(s.client, entry.Name)

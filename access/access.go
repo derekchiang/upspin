@@ -287,10 +287,10 @@ func (a *Access) Marshal() []byte {
 		}
 
 		// userSet is used to de-dup users
-		var userSet map[upspin.PathName]bool
+		userSet := make(map[string]bool)
 		// users are already sorted
 		for i, userParsed := range users {
-			user := userParsed.Path()
+			user := strings.TrimRight(string(userParsed.Path()), "/")
 			if userSet[user] {
 				continue
 			}
@@ -299,9 +299,10 @@ func (a *Access) Marshal() []byte {
 				buf.WriteString(string(user))
 			} else {
 				// we use comma to separate users
-				buf.WriteString(" ," + string(user))
+				buf.WriteString(", " + string(user))
 			}
 		}
+		buf.WriteString("\n")
 	}
 	return buf.Bytes()
 }
